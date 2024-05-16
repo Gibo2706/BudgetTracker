@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("kotlin-kapt")
 }
 
 android {
@@ -63,4 +64,20 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // retrofit
+    implementation(libs.retrofit)
+    // GSon
+    implementation(libs.gson)
+    // coroutines
+    implementation(libs.coroutines.android)
+    implementation(libs.coroutines.core)
+    // viewmodel and livedata
+    implementation(libs.viewmode.lifecycle)
+    implementation(libs.livedata.lifecycle)
+    // login interceptor
+    implementation(libs.login.interceptor)
+
+    // Annotation
+    kapt("androidx.lifecycle:lifecycle-compiler:2.8.0")
 }

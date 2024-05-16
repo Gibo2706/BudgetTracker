@@ -38,7 +38,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
     packaging {
         resources {
@@ -78,6 +78,15 @@ dependencies {
     // login interceptor
     implementation(libs.login.interceptor)
 
+    // Navigation
+    implementation(libs.androidx.navigation)
+    implementation(libs.androidx.material)
+
+    // Material Design 3
+    implementation(libs.material3)
+    implementation(libs.androidx.material3.window.size.classe)
+    implementation(libs.androidx.material3.adaptive.navigation.suite)
+
     // Annotation
-    kapt("androidx.lifecycle:lifecycle-compiler:2.8.0")
+    kapt(libs.androidx.lifecycle.compiler)
 }

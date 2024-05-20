@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -69,6 +70,7 @@ dependencies {
     implementation(libs.retrofit)
     // GSon
     implementation(libs.gson)
+    implementation(libs.converter.gson)
     // coroutines
     implementation(libs.coroutines.android)
     implementation(libs.coroutines.core)
@@ -87,6 +89,17 @@ dependencies {
     implementation(libs.androidx.material3.window.size.classe)
     implementation(libs.androidx.material3.adaptive.navigation.suite)
 
+    // Dagger hilt
+    implementation(libs.androidx.hilt.navigation.fragment)
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+
+
     // Annotation
     kapt(libs.androidx.lifecycle.compiler)
 }
+
+kapt {
+    correctErrorTypes = true
+}
+

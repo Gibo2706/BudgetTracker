@@ -27,6 +27,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import pmf.it.app.budgettracker.ui.Screen
+import pmf.it.app.budgettracker.ui.screen.HomeScreen
 import pmf.it.app.budgettracker.ui.theme.BudgetTrackerTheme
 
 @AndroidEntryPoint
@@ -34,8 +35,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val items = listOf(
-            Screen.Profile,
-            Screen.FriendsList
+            Screen.Home,
+            Screen.Plan
         )
         enableEdgeToEdge()
         setContent {
@@ -71,11 +72,11 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) {innerPadding ->
-                    NavHost(navController, startDestination = Screen.Profile.route, Modifier.padding(innerPadding)) {
-                        composable(Screen.Profile.route) {
-                            Greeting("Profile")
+                    NavHost(navController, startDestination = Screen.Home.route, Modifier.padding(innerPadding)) {
+                        composable(Screen.Home.route) {
+                            HomeScreen()
                         }
-                        composable(Screen.FriendsList.route) {
+                        composable(Screen.Plan.route) {
                             Greeting("Friends List")
                         }
                     }

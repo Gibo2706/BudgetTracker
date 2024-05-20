@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 //noinspection UsingMaterialAndMaterial3Libraries
@@ -13,6 +14,7 @@ import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +30,7 @@ import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import pmf.it.app.budgettracker.ui.Screen
 import pmf.it.app.budgettracker.ui.screen.HomeScreen
+import pmf.it.app.budgettracker.ui.screen.ProfileScreen
 import pmf.it.app.budgettracker.ui.theme.BudgetTrackerTheme
 
 @AndroidEntryPoint
@@ -36,7 +39,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val items = listOf(
             Screen.Home,
-            Screen.Plan
+            Screen.Plan,
+            Screen.Profile
         )
         enableEdgeToEdge()
         setContent {
@@ -50,9 +54,11 @@ class MainActivity : ComponentActivity() {
                             val currentDestination = navBackStackEntry?.destination
                             items.forEach { screen ->
                                 BottomNavigationItem(
+                                    modifier = Modifier
+                                        .background(MaterialTheme.colorScheme.surface),
                                     icon = {
                                         Icon(
-                                            Icons.Filled.Favorite,
+                                            imageVector = screen.icon ?: Icons.Default.Favorite,
                                             contentDescription = null
                                         )
                                     },
@@ -78,6 +84,9 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Screen.Plan.route) {
                             Greeting("Friends List")
+                        }
+                        composable(Screen.Profile.route) {
+                            ProfileScreen()
                         }
                     }
                 }

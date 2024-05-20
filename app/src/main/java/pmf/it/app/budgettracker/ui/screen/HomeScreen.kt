@@ -10,21 +10,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import pmf.it.app.budgettracker.util.CircleProgressBar
-import pmf.it.app.budgettracker.util.ColorState
 import pmf.it.app.budgettracker.viewmodel.HomeScreenViewModel
 
 @Composable
@@ -82,14 +76,3 @@ fun HomeScreen(viewModel: HomeScreenViewModel = hiltViewModel() ) {
     }
 }
 
-fun colorBasedOnProgress(state: ColorState): Color {
-    return if (state.progress > 0.5f) Color.Green else Color.Red
-}
-
-fun halfColoredBoxModifier(state: ColorState): Modifier {
-    val color = colorBasedOnProgress(state)
-    return Modifier
-        .fillMaxSize()
-        .clip(CircleShape)
-        .background(color)
-}

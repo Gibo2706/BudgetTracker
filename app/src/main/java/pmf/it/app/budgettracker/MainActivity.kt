@@ -30,6 +30,7 @@ import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import pmf.it.app.budgettracker.ui.Screen
 import pmf.it.app.budgettracker.ui.screen.HomeScreen
+import pmf.it.app.budgettracker.ui.screen.PlanScreen
 import pmf.it.app.budgettracker.ui.screen.ProfileScreen
 import pmf.it.app.budgettracker.ui.theme.BudgetTrackerTheme
 
@@ -83,7 +84,7 @@ class MainActivity : ComponentActivity() {
                             HomeScreen()
                         }
                         composable(Screen.Plan.route) {
-                            Greeting("Friends List")
+                            PlanScreen()
                         }
                         composable(Screen.Profile.route) {
                             ProfileScreen()

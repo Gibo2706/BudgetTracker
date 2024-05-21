@@ -16,12 +16,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import pmf.it.app.budgettracker.util.CircleProgressBar
 import pmf.it.app.budgettracker.viewmodel.HomeScreenViewModel
 
 @Composable
+@Preview(showBackground = true, backgroundColor = 0x000000)
 fun HomeScreen(viewModel: HomeScreenViewModel = hiltViewModel() ) {
     Surface(color = MaterialTheme.colorScheme.background) {
         Column(

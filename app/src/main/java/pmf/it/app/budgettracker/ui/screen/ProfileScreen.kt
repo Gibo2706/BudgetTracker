@@ -21,12 +21,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import pmf.it.app.budgettracker.R
 import pmf.it.app.budgettracker.viewmodel.ProfileScreenViewModel
 
 @Composable
+@Preview(showBackground = true, backgroundColor = 0x000000)
 fun ProfileScreen(viewModel: ProfileScreenViewModel = hiltViewModel()) {
     Surface(
         color = MaterialTheme.colorScheme.background,

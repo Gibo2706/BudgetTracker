@@ -11,14 +11,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -28,6 +32,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import pmf.it.app.budgettracker.ui.Screen
 import pmf.it.app.budgettracker.ui.screen.HomeScreen
 import pmf.it.app.budgettracker.ui.screen.PlanScreen
@@ -47,6 +52,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             BudgetTrackerTheme {
                 val navController = rememberNavController()
+                val snackbarHostState = remember { SnackbarHostState() }
+                val coroutineScope = rememberCoroutineScope()
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
@@ -77,8 +84,14 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                    }
+                    },
+                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                 ) {innerPadding ->
+                    var showSnackBar = { message: String ->
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(message)
+                        }
+                    }
                     NavHost(navController, startDestination = Screen.Home.route, Modifier.padding(innerPadding)) {
                         composable(Screen.Home.route) {
                             HomeScreen()

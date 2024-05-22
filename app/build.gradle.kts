@@ -88,6 +88,7 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.androidx.material3.window.size.classe)
     implementation(libs.androidx.material3.adaptive.navigation.suite)
+    implementation(libs.androidx.material.icons.extended)
 
     // Dagger hilt
     implementation(libs.androidx.hilt.navigation.fragment)

@@ -1,5 +1,6 @@
 package pmf.it.app.budgettracker.data.network
 
+import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,7 +16,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
     // temporary base url, will be changed after backend is deployed
-    private const val BASE_URL = "http://localhost:8081/"
+    private const val BASE_URL = "https://budgettrackerback.onrender.com/"
 
     @Singleton
     @Provides
@@ -33,7 +34,7 @@ object NetworkModule {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(Gson().newBuilder().setLenient().create()))
             .build()
     }
 

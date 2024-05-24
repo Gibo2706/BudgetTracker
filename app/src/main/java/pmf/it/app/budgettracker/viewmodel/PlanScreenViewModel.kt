@@ -2,10 +2,15 @@ package pmf.it.app.budgettracker.viewmodel
 
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
+import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
 import okhttp3.internal.wait
 import pmf.it.app.budgettracker.data.model.Plan
@@ -21,7 +26,11 @@ class PlanScreenViewModel @Inject constructor(
 ) : ViewModel() {
     val responseMessage = mutableStateOf("") // response message from the server
     val currentPlan = mutableStateOf(Plan("", emptyList(), emptyList())) // current plan
+    var allPlans = mutableStateListOf<Plan>()
 
+    init {
+        getAllPlans(1)
+    }
     fun addPlan(plan: Plan) {
         apiService.addPlan(plan).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
@@ -29,6 +38,7 @@ class PlanScreenViewModel @Inject constructor(
                     response.body()?.let {
                         responseMessage.value = it.string()
                         currentPlan.value = plan
+                        getAllPlans(1)
                     } ?: run {
                         responseMessage.value = "Server error"
                     }
@@ -43,4 +53,18 @@ class PlanScreenViewModel @Inject constructor(
             }
         })
     }
+
+    fun getAllPlans(id: Long){
+        GlobalScope.launch {
+            allPlans.addAll(apiService.getAllByUser(id))
+            allPlans.forEach {
+                Log.d("PlanScreenViewModel", it.toString())
+            }
+        }
+    }
+
+    fun changeCurPlan(newPlan: Plan){
+        currentPlan.value = newPlan
+    }
+
 }

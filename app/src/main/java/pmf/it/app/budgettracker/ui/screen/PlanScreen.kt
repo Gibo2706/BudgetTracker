@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.AlertDialog
@@ -64,6 +66,7 @@ fun PlanScreen(
     val statusSnackBar by viewModel.responseMessage
     val currentPlan by viewModel.currentPlan
     val context = LocalContext.current
+    val allPlans = viewModel.allPlans
     Surface {
         LaunchedEffect(statusSnackBar) {
             if(statusSnackBar.isNotEmpty()) {
@@ -135,7 +138,7 @@ fun PlanScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(text = "Goal", style = MaterialTheme.typography.titleLarge)
-                    Text(text = "0", style = MaterialTheme.typography.titleLarge)
+                    Text(text = "${currentPlan.cilj}", style = MaterialTheme.typography.titleLarge)
                 }
             }
             Row(
@@ -182,7 +185,14 @@ fun PlanScreen(
                 AddExpensesDialog(onDismiss = { showAddExpensesDialog.value = false })
             }
             if (showChangePlanDialog.value) {
-                ChangePlanDialog(onDismiss = { showChangePlanDialog.value = false })
+                ChangePlanDialog(
+                    allPlans = allPlans.toList(),
+                    onDismiss = { showChangePlanDialog.value = false },
+                    onChange = {
+                        showChangePlanDialog.value = false
+                        viewModel.changeCurPlan(it)
+                    }
+                )
             }
             if (showNewPlanDialog.value) {
                 NewPlanDialog(
@@ -327,16 +337,39 @@ fun AddExpensesDialog(onDismiss: () -> Unit, onAdd: (Trosak) -> Unit = {}) {
 }
 
 @Composable
-fun ChangePlanDialog(onDismiss: () -> Unit) {
+fun ChangePlanDialog(
+    allPlans: List<Plan>,
+    onDismiss: () -> Unit,
+    onChange: (Plan) -> Unit
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Change Plan") },
-        text = { Text("Change plan details here.") },
-        confirmButton = {
-            Button(onClick = onDismiss) {
-                Text("Change")
+        text = {
+            LazyColumn {
+                if(allPlans.isNotEmpty() ){
+                    items(allPlans) {
+                        Row(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ){
+                            Text(text = it.name)
+                            Button(onClick = { onChange(it)  }) {
+                                Text(text = "Select")
+                            }
+                        }
+                    }
+                }else{
+                    item {
+                        Text(text = "Either you don't have any plan or it's still loading!")
+                    }
+                }
             }
         },
+        confirmButton = { },
         dismissButton = {
             Button(onClick = onDismiss) {
                 Text("Cancel")

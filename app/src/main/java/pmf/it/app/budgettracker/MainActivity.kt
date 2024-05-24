@@ -2,11 +2,17 @@ package pmf.it.app.budgettracker
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.systemGestureExclusion
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.BottomNavigation
 //noinspection UsingMaterialAndMaterial3Libraries
@@ -20,9 +26,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -48,16 +57,33 @@ class MainActivity : ComponentActivity() {
             Screen.Plan,
             Screen.Profile
         )
-        enableEdgeToEdge()
         setContent {
             BudgetTrackerTheme {
+                var systemBarStyle by remember {
+                    val defaultSystemBarColor = android.graphics.Color.TRANSPARENT
+                    mutableStateOf(
+                        SystemBarStyle.auto(
+                            lightScrim = defaultSystemBarColor,
+                            darkScrim = defaultSystemBarColor
+                        )
+                    )
+                }
+                LaunchedEffect(systemBarStyle) {
+                    enableEdgeToEdge(
+                        navigationBarStyle = systemBarStyle,
+                    )
+                }
                 val navController = rememberNavController()
                 val snackbarHostState = remember { SnackbarHostState() }
                 val coroutineScope = rememberCoroutineScope()
                 Scaffold(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .systemGestureExclusion()
+                        .fillMaxSize(),
                     bottomBar = {
-                        BottomNavigation {
+                        BottomNavigation(
+                            modifier = Modifier.systemBarsPadding(),
+                        ) {
                             val navBackStackEntry by navController.currentBackStackEntryAsState()
                             val currentDestination = navBackStackEntry?.destination
                             items.forEach { screen ->

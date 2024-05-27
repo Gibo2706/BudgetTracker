@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.ir.backend.js.compile
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -68,6 +70,7 @@ dependencies {
 
     // retrofit
     implementation(libs.retrofit)
+    implementation(libs.okhttp)
     // GSon
     implementation(libs.gson)
     implementation(libs.converter.gson)

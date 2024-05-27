@@ -1,9 +1,6 @@
 package pmf.it.app.budgettracker.ui.screen
 
-import android.content.Context
 import android.content.res.Configuration
-import android.provider.Settings.Global
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,18 +10,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.sharp.DeleteForever
+import androidx.compose.material.icons.sharp.List
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarData
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -33,7 +31,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,11 +39,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import pmf.it.app.budgettracker.MainActivity
 import pmf.it.app.budgettracker.data.model.Plan
 import pmf.it.app.budgettracker.data.model.Prihod
 import pmf.it.app.budgettracker.data.model.Trosak
@@ -63,10 +55,13 @@ fun PlanScreen(
     val showAddExpensesDialog = remember { mutableStateOf(false) }
     val showChangePlanDialog = remember { mutableStateOf(false) }
     val showNewPlanDialog = remember { mutableStateOf(false) }
+    val showPrihodListDialog = remember { mutableStateOf(false) }
+    val showTrosakListDialog = remember { mutableStateOf(false) }
     val statusSnackBar by viewModel.responseMessage
     val currentPlan by viewModel.currentPlan
     val context = LocalContext.current
     val allPlans = viewModel.allPlans
+    val currentProgress by viewModel.currentProgress
     Surface {
         LaunchedEffect(statusSnackBar) {
             if(statusSnackBar.isNotEmpty()) {
@@ -99,6 +94,11 @@ fun PlanScreen(
                 ) {
                     Text(text = "Income", style = MaterialTheme.typography.titleLarge)
                     Text(text = "${currentPlan.prihodi.size}", style = MaterialTheme.typography.titleLarge)
+                    SmallFloatingActionButton(onClick = {
+                        showPrihodListDialog.value = true
+                    }) {
+                        Icon(Icons.Sharp.List, contentDescription = "List")
+                    }
                 }
                 Column(
                     modifier = Modifier
@@ -108,6 +108,11 @@ fun PlanScreen(
                 ) {
                     Text(text = "Expenses", style = MaterialTheme.typography.titleLarge)
                     Text(text = "${currentPlan.troskovi.size}", style = MaterialTheme.typography.titleLarge)
+                    SmallFloatingActionButton(onClick = {
+                        showTrosakListDialog.value = true
+                    }) {
+                        Icon(Icons.Sharp.List, contentDescription = "List")
+                    }
                 }
             }
             /*Row {
@@ -137,8 +142,8 @@ fun PlanScreen(
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "Goal", style = MaterialTheme.typography.titleLarge)
-                    Text(text = "${currentPlan.cilj}", style = MaterialTheme.typography.titleLarge)
+                    Text(text = "Goal (${currentPlan.timePeriod} months)", style = MaterialTheme.typography.titleLarge)
+                    Text(text = "${currentProgress}/${currentPlan.cilj}", style = MaterialTheme.typography.titleLarge)
                 }
             }
             Row(
@@ -166,7 +171,11 @@ fun PlanScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FloatingActionButton(onClick = { showChangePlanDialog.value = true }) {
+                FloatingActionButton(
+                    onClick = {
+                        showChangePlanDialog.value = true
+                        viewModel.getAllPlans(1)
+                    }) {
                     Text(text = "List", style = MaterialTheme.typography.titleMedium)
                 }
                 FloatingActionButton(
@@ -176,21 +185,39 @@ fun PlanScreen(
             }
 
             if (showAddGoalDialog.value) {
-                AddGoalDialog(onDismiss = { showAddGoalDialog.value = false })
+                AddGoalDialog(
+                    onDismiss = { showAddGoalDialog.value = false },
+                    onAdd = { p1, p2 ->
+                        viewModel.setGoal(p1, p2)
+                        showAddGoalDialog.value = false
+                    }
+                )
             }
             if (showAddIncomeDialog.value) {
-                AddIncomeDialog(onDismiss = { showAddIncomeDialog.value = false })
+                AddIncomeDialog(
+                    onDismiss = { showAddIncomeDialog.value = false },
+                    onAdd = {
+                        viewModel.addPrihod(it)
+                        showAddIncomeDialog.value = false
+                    }
+                )
             }
             if (showAddExpensesDialog.value) {
-                AddExpensesDialog(onDismiss = { showAddExpensesDialog.value = false })
+                AddExpensesDialog(
+                    onDismiss = { showAddExpensesDialog.value = false },
+                    onAdd = {
+                        viewModel.addTrosak(it)
+                        showAddExpensesDialog.value = false
+                    }
+                )
             }
             if (showChangePlanDialog.value) {
                 ChangePlanDialog(
                     allPlans = allPlans.toList(),
                     onDismiss = { showChangePlanDialog.value = false },
-                    onChange = {
+                    onChange = {it, i ->
                         showChangePlanDialog.value = false
-                        viewModel.changeCurPlan(it)
+                        viewModel.changeCurPlan(it, i)
                     }
                 )
             }
@@ -203,13 +230,34 @@ fun PlanScreen(
                     }
                 )
             }
+            if (showPrihodListDialog.value) {
+                PrihodListDialog(
+                    plan = currentPlan,
+                    onDismiss = { showPrihodListDialog.value = false },
+                    onDelete = {
+                        showPrihodListDialog.value = false
+                        viewModel.deletePrihod(it)
+                    }
+                )
+            }
+            if (showTrosakListDialog.value) {
+                TrosakListDialog(
+                    plan = currentPlan,
+                    onDismiss = { showTrosakListDialog.value = false },
+                    onDelete = {
+                        showTrosakListDialog.value = false
+                        viewModel.deleteTrosak(it)
+                    }
+                )
+            }
         }
     }
 }
 
 @Composable
-fun AddGoalDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit = {}) {
+fun AddGoalDialog(onDismiss: () -> Unit, onAdd: (String, Long) -> Unit) {
     var goal by remember { mutableStateOf("") }
+    var timePeriod by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add Goal") },
@@ -227,10 +275,17 @@ fun AddGoalDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit = {}) {
                         modifier = Modifier.padding(16.dp),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
+                    TextField(
+                        value = timePeriod,
+                        onValueChange = { timePeriod = it },
+                        label = { Text("Time period") },
+                        modifier = Modifier.padding(16.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
                 }
                },
         confirmButton = {
-            Button(onClick = { onAdd(goal) }) {
+            Button(onClick = { onAdd(goal, timePeriod.toLong()) }) {
                 Text("Add")
             }
         },
@@ -340,7 +395,7 @@ fun AddExpensesDialog(onDismiss: () -> Unit, onAdd: (Trosak) -> Unit = {}) {
 fun ChangePlanDialog(
     allPlans: List<Plan>,
     onDismiss: () -> Unit,
-    onChange: (Plan) -> Unit
+    onChange: (Plan, Int) -> Unit = {_,_ -> }
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -348,7 +403,7 @@ fun ChangePlanDialog(
         text = {
             LazyColumn {
                 if(allPlans.isNotEmpty() ){
-                    items(allPlans) {
+                    itemsIndexed(allPlans) {i, it ->
                         Row(
                             modifier = Modifier
                                 .padding(16.dp)
@@ -357,7 +412,7 @@ fun ChangePlanDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ){
                             Text(text = it.name)
-                            Button(onClick = { onChange(it)  }) {
+                            Button(onClick = { onChange(it, i)  }) {
                                 Text(text = "Select")
                             }
                         }
@@ -382,6 +437,7 @@ fun ChangePlanDialog(
 fun NewPlanDialog(onDismiss: () -> Unit, onAdd: (Plan) -> Unit = {}) {
     var plan by remember { mutableStateOf("") }
     var goal by remember { mutableStateOf("") }
+    var timePeriod by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("New Plan") },
@@ -405,6 +461,13 @@ fun NewPlanDialog(onDismiss: () -> Unit, onAdd: (Plan) -> Unit = {}) {
                     modifier = Modifier.padding(16.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
+                TextField(
+                    value = timePeriod,
+                    onValueChange = { timePeriod = it },
+                    label = { Text("Time period") },
+                    modifier = Modifier.padding(16.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
             }
 
         },
@@ -415,17 +478,110 @@ fun NewPlanDialog(onDismiss: () -> Unit, onAdd: (Plan) -> Unit = {}) {
                     emptyList(),
                     emptyList(),
                     goal.toDouble(),
+                    timePeriod.toLong(),
                     User(
-                        "johndoe",
-                        "test@gmail.com",
-                        "John",
-                        "Doe"
+                        "username",
+                        "Test@test.com",
+                        "Test",
+                        "Testovic"
                     )
                 ))
             }) {
                 Text("Create")
             }
         },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun PrihodListDialog(
+    plan: Plan,
+    onDismiss: () -> Unit,
+    onDelete: (Prihod) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Change Plan") },
+        text = {
+            LazyColumn(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if(plan.prihodi.isNotEmpty())
+                    items(plan.prihodi) {
+                        Row(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ){
+                            Text(text = "${it.name} - ${it.amount}")
+                            SmallFloatingActionButton(onClick = { onDelete(it)  }) {
+                                Icon(Icons.Sharp.DeleteForever, contentDescription = "Delete")
+                            }
+                        }
+                    }
+                else
+                    item {
+                        Text(text = "No income added yet!")
+                    }
+
+            }
+        },
+        confirmButton = {  },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun TrosakListDialog(
+    plan: Plan,
+    onDismiss: () -> Unit,
+    onDelete: (Trosak) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Change Plan") },
+        text = {
+            LazyColumn(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if(plan.troskovi.isNotEmpty())
+                    items(plan.troskovi) {
+                        Row(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ){
+                            Text(text = "${it.name} - ${it.amount}")
+                            SmallFloatingActionButton(onClick = { onDelete(it)  }) {
+                                Icon(Icons.Sharp.DeleteForever, contentDescription = "Delete")
+                            }
+                        }
+                    }
+                else
+                    item {
+                        Text(text = "No expenses added yet!")
+                    }
+
+            }
+        },
+        confirmButton = {  },
         dismissButton = {
             Button(onClick = onDismiss) {
                 Text("Cancel")

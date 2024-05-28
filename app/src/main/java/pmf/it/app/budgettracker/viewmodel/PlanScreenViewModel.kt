@@ -51,7 +51,7 @@ class PlanScreenViewModel @Inject constructor(
                     if (response.isSuccessful) {
                         response.body()?.let {
                             responseMessage.value = it.string()
-                            currentPlan.value = plan
+                            changeCurPlan(plan)
                             getAllPlans(1)
                         } ?: run {
                             responseMessage.value = "Server error"
@@ -75,11 +75,8 @@ class PlanScreenViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val temp = apiService.getAllByUser(id)
-                allPlans.removeAll(temp)
+                allPlans.clear()
                 allPlans.addAll(temp)
-                allPlans.forEach {
-                    Log.d("PlanScreenViewModel", it.toString())
-                }
                 if (currentPlan.value.name == "" && allPlans.isNotEmpty())
                     changeCurPlan(allPlans[0])
             }catch (e: Exception){

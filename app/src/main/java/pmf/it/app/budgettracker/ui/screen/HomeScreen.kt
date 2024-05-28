@@ -1,5 +1,6 @@
 package pmf.it.app.budgettracker.ui.screen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +36,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import pmf.it.app.budgettracker.util.CircleProgressBar
 import pmf.it.app.budgettracker.viewmodel.HomeScreenViewModel
+import pmf.it.app.budgettracker.viewmodel.PlanScreenViewModel
 
 @Composable
 @Preview(showBackground = true, backgroundColor = 0x000000)
@@ -44,13 +46,14 @@ fun HomeScreen(viewModel: HomeScreenViewModel = hiltViewModel() ) {
     var showAllPlansDialog by remember{
         mutableStateOf(false)
     }
+    val allPlans = viewModel.allPlans
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
 
     LaunchedEffect(lifecycleState) {
         when(lifecycleState) {
             Lifecycle.State.STARTED -> {
-                viewModel.checkIfUserIsLoggedIn()
+                //viewModel.checkIfUserIsLoggedIn()
             }
             Lifecycle.State.RESUMED -> {
                 viewModel.getAllPlans(1)
@@ -120,7 +123,7 @@ fun HomeScreen(viewModel: HomeScreenViewModel = hiltViewModel() ) {
             }
 
             if(showAllPlansDialog){
-                ChangePlanDialog(allPlans = viewModel.allPlans, onDismiss = { showAllPlansDialog = false }) { it, i ->
+                ChangePlanDialog(allPlans = allPlans, onDismiss = { showAllPlansDialog = false }) { it, i ->
                     viewModel.planIndex = i
                     viewModel.changeCurPlan(it, i)
                     showAllPlansDialog = false

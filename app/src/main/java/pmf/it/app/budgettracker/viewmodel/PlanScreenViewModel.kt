@@ -1,49 +1,44 @@
 package pmf.it.app.budgettracker.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.scopes.ViewModelScoped
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
-import okhttp3.internal.wait
+import pmf.it.app.budgettracker.data.PreferencesManager
 import pmf.it.app.budgettracker.data.model.Plan
 import pmf.it.app.budgettracker.data.model.Prihod
 import pmf.it.app.budgettracker.data.model.Trosak
 import pmf.it.app.budgettracker.data.network.ApiService
-import pmf.it.app.budgettracker.ui.screen.HomeScreen
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.time.Period
 import javax.inject.Inject
 
 @HiltViewModel
 class PlanScreenViewModel @Inject constructor(
     private val apiService: ApiService,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
     val responseMessage = mutableStateOf("") // response message from the server
     val currentPlan = mutableStateOf(Plan("", emptyList(), emptyList())) // current plan
     var allPlans = mutableStateListOf<Plan>()
     var currentProgress = mutableDoubleStateOf(0.0)
+    val token = preferencesManager.getData("token", "")
+    val user = preferencesManager.getData("user", "")
     init {
-        getAllPlans(1)
+        if(token.isNotEmpty())
+            getAllPlans(1)
         if(allPlans.isNotEmpty())
             changeCurPlan(allPlans[0])
     }
     fun addPlan(plan: Plan) {
         try {
-            apiService.addPlan(plan).enqueue(object : Callback<ResponseBody> {
+            apiService.addPlan(token, user, plan).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
                     response: Response<ResponseBody>
@@ -74,7 +69,7 @@ class PlanScreenViewModel @Inject constructor(
     fun getAllPlans(id: Long){
         viewModelScope.launch {
             try {
-                val temp = apiService.getAllByUser(id)
+                val temp = apiService.getAllByUser(token, user, id)
                 allPlans.clear()
                 allPlans.addAll(temp)
                 if (currentPlan.value.name == "" && allPlans.isNotEmpty())
@@ -93,7 +88,7 @@ class PlanScreenViewModel @Inject constructor(
 
     fun addTrosak(trosak: Trosak){
         try {
-            apiService.addTrosak(currentPlan.value.name, trosak).enqueue(object : Callback<ResponseBody> {
+            apiService.addTrosak(token, user, currentPlan.value.name, trosak).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
                     response: Response<ResponseBody>
@@ -124,7 +119,7 @@ class PlanScreenViewModel @Inject constructor(
 
     fun deleteTrosak(trosak: Trosak){
         try {
-            apiService.deleteTrosak(currentPlan.value.name, trosak).enqueue(object : Callback<ResponseBody> {
+            apiService.deleteTrosak(token, user, currentPlan.value.name, trosak).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
                     response: Response<ResponseBody>
@@ -156,7 +151,7 @@ class PlanScreenViewModel @Inject constructor(
 
     fun addPrihod(prihod: Prihod){
         try {
-            apiService.addPrihod(currentPlan.value.name, prihod).enqueue(object : Callback<ResponseBody> {
+            apiService.addPrihod(token, user, currentPlan.value.name, prihod).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
                     response: Response<ResponseBody>
@@ -187,7 +182,7 @@ class PlanScreenViewModel @Inject constructor(
 
     fun deletePrihod(prihod: Prihod){
         try {
-            apiService.deletePrihod(currentPlan.value.name, prihod).enqueue(object : Callback<ResponseBody> {
+            apiService.deletePrihod(token, user, currentPlan.value.name, prihod).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
                     response: Response<ResponseBody>
@@ -218,7 +213,7 @@ class PlanScreenViewModel @Inject constructor(
 
     fun setGoal(goal: String, timePeriod: Long){
         try {
-            apiService.addGoal(currentPlan.value.name, goal.toDouble(), timePeriod).enqueue(object : Callback<ResponseBody> {
+            apiService.addGoal(token, user, currentPlan.value.name, goal.toDouble(), timePeriod).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
                     response: Response<ResponseBody>

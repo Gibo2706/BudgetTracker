@@ -1,5 +1,7 @@
 package pmf.it.app.budgettracker.ui.screen
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,20 +28,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import pmf.it.app.budgettracker.viewmodel.LoginRegViewModel
 
 @Composable
-@Preview(showBackground = true, backgroundColor = 0x000000)
-fun LoginScreen(viewModel: LoginRegViewModel = hiltViewModel()){
+fun LoginScreen(
+    viewModel: LoginRegViewModel = hiltViewModel(),
+    navController: NavController,
+){
     var userName by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     Surface {
         Column(
             modifier = Modifier
@@ -101,7 +109,14 @@ fun LoginScreen(viewModel: LoginRegViewModel = hiltViewModel()){
                 Button(onClick = { /*TODO*/ }) {
                     Text(text = "Register")
                 }
-                Button(onClick = { /*TODO*/ }) {
+                Button(onClick = {
+                    if(userName.isEmpty() || password.isEmpty()){
+                        Toast.makeText(context, "Username or password is empty", Toast.LENGTH_SHORT).show()
+                        Log.d("LoginScreen", "Username or password is empty")
+                        return@Button
+                    }
+                    viewModel.login(userName, password, navController)
+                }) {
                     Text(text = "Login")
                 }
             }

@@ -1,7 +1,9 @@
 package pmf.it.app.budgettracker.ui
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AppRegistration
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -10,4 +12,7 @@ sealed class Screen(val route: String, val resource: String, val icon: ImageVect
     data object Home : Screen("Home", "Home", Icons.Default.Home)
     data object Plan : Screen("Plan", "Plan", Icons.Default.Menu)
     data object Profile : Screen("Profile", "Profile", Icons.Default.Person)
+    data object Login : Screen("Login", "Login", Icons.Default.Login)
+    data object Register : Screen("Register", "Register", Icons.Default.AppRegistration)
+
 }

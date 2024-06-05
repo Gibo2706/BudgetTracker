@@ -75,7 +75,7 @@ fun ProfileScreen(viewModel: ProfileScreenViewModel = hiltViewModel()) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = { viewModel.logout() },
                     modifier = Modifier
                         .padding(16.dp)
                         .background(MaterialTheme.colorScheme.surface),

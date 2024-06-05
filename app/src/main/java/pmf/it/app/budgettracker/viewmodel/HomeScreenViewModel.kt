@@ -6,22 +6,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
+import pmf.it.app.budgettracker.data.PreferencesManager
 import pmf.it.app.budgettracker.data.model.Plan
 import pmf.it.app.budgettracker.data.network.ApiService
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeScreenViewModel @Inject constructor(
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    preferencesManager: PreferencesManager
 ) : ViewModel() {
     var isUserLoggedIn = false
     var currentPlan = mutableStateOf(Plan("", emptyList(), emptyList()))
     var currentProgress = mutableDoubleStateOf(0.0)
     var allPlans = mutableStateListOf<Plan>()
     var planIndex: Int = 0;
+    val token = preferencesManager.getData("token", "")
+    val user = preferencesManager.getData("user", "")
     init {
-        getAllPlans(1);
+        if(token.isNotEmpty())
+            getAllPlans(1);
     }
 
 
@@ -41,7 +47,7 @@ class HomeScreenViewModel @Inject constructor(
     fun getAllPlans(userId: Int){
         viewModelScope.launch {
             try {
-                var temp = apiService.getAllByUser(userId.toLong())
+                var temp = apiService.getAllByUser(token, user, userId.toLong())
                 allPlans.clear()
                 allPlans.addAll(temp)
                 if (currentPlan.value.name == "" && allPlans.isNotEmpty())

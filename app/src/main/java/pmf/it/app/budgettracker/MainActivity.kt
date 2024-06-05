@@ -42,21 +42,21 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import pmf.it.app.budgettracker.data.PreferencesManager
 import pmf.it.app.budgettracker.ui.Screen
 import pmf.it.app.budgettracker.ui.screen.HomeScreen
+import pmf.it.app.budgettracker.ui.screen.LoginScreen
 import pmf.it.app.budgettracker.ui.screen.PlanScreen
 import pmf.it.app.budgettracker.ui.screen.ProfileScreen
+import pmf.it.app.budgettracker.ui.screen.RegisterScreen
 import pmf.it.app.budgettracker.ui.theme.BudgetTrackerTheme
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private val prefManager = PreferencesManager(this)
+    var token = prefManager.getData("token", "")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val items = listOf(
-            Screen.Home,
-            Screen.Plan,
-            Screen.Profile
-        )
         setContent {
             BudgetTrackerTheme {
                 var systemBarStyle by remember {
@@ -73,52 +73,61 @@ class MainActivity : ComponentActivity() {
                         navigationBarStyle = systemBarStyle,
                     )
                 }
+                val tokenL by remember { //TODO: FIX THIS
+                    mutableStateOf(token)
+                }
                 val navController = rememberNavController()
                 val snackbarHostState = remember { SnackbarHostState() }
                 val coroutineScope = rememberCoroutineScope()
+                val items = listOf(
+                    Screen.Home,
+                    Screen.Plan,
+                    Screen.Profile
+                )
                 Scaffold(
                     modifier = Modifier
                         .systemGestureExclusion()
                         .fillMaxSize(),
                     bottomBar = {
-                        BottomNavigation(
-                            modifier = Modifier.systemBarsPadding(),
-                        ) {
-                            val navBackStackEntry by navController.currentBackStackEntryAsState()
-                            val currentDestination = navBackStackEntry?.destination
-                            items.forEach { screen ->
-                                BottomNavigationItem(
-                                    modifier = Modifier
-                                        .background(MaterialTheme.colorScheme.surface),
-                                    icon = {
-                                        Icon(
-                                            imageVector = screen.icon ?: Icons.Default.Favorite,
-                                            contentDescription = null
-                                        )
-                                    },
-                                    label = { Text(screen.resource) },
-                                    selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                                    onClick = {
-                                        navController.navigate(screen.route) {
-                                            popUpTo(navController.graph.findStartDestination().id) {
-                                                saveState = true
+                        if(tokenL.isNotEmpty()) {
+                            BottomNavigation(
+                                modifier = Modifier.systemBarsPadding(),
+                            ) {
+                                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                                val currentDestination = navBackStackEntry?.destination
+                                items.forEach { screen ->
+                                    BottomNavigationItem(
+                                        modifier = Modifier
+                                            .background(MaterialTheme.colorScheme.surface),
+                                        icon = {
+                                            Icon(
+                                                imageVector = screen.icon ?: Icons.Default.Favorite,
+                                                contentDescription = null
+                                            )
+                                        },
+                                        label = { Text(screen.resource) },
+                                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                        onClick = {
+                                            navController.navigate(screen.route) {
+                                                popUpTo(navController.graph.findStartDestination().id) {
+                                                    saveState = true
+                                                }
+                                                launchSingleTop = true
+                                                restoreState = true
                                             }
-                                            launchSingleTop = true
-                                            restoreState = true
                                         }
-                                    }
-                                )
+                                    )
+                                }
                             }
                         }
                     },
                     snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                 ) {innerPadding ->
-                    var showSnackBar = { message: String ->
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(message)
-                        }
-                    }
-                    NavHost(navController, startDestination = Screen.Home.route, Modifier.padding(innerPadding)) {
+                    NavHost(
+                        navController,
+                        startDestination = Screen.Login.route,
+                        Modifier.padding(innerPadding))
+                    {
                         composable(Screen.Home.route) {
                             HomeScreen()
                         }
@@ -127,6 +136,12 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Screen.Profile.route) {
                             ProfileScreen()
+                        }
+                        composable(Screen.Login.route) {
+                            LoginScreen(navController = navController)
+                        }
+                        composable(Screen.Register.route){
+                            RegisterScreen()
                         }
                     }
                 }

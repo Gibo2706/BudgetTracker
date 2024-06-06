@@ -29,11 +29,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import pmf.it.app.budgettracker.data.PreferencesManager
 import pmf.it.app.budgettracker.util.CircleProgressBar
 import pmf.it.app.budgettracker.viewmodel.HomeScreenViewModel
 import pmf.it.app.budgettracker.viewmodel.PlanScreenViewModel
@@ -49,16 +51,22 @@ fun HomeScreen(viewModel: HomeScreenViewModel = hiltViewModel() ) {
     val allPlans = viewModel.allPlans
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
-
+    val preferencesManager = PreferencesManager(LocalContext.current)
+    var userId = preferencesManager.getData("userId", "1").toInt()
+    var user = preferencesManager.getData("user", "User")
     LaunchedEffect(lifecycleState) {
         when(lifecycleState) {
             Lifecycle.State.STARTED -> {
                 //viewModel.checkIfUserIsLoggedIn()
             }
             Lifecycle.State.RESUMED -> {
-                viewModel.getAllPlans(1)
+                viewModel.getAllPlans(userId)
             }
-            else -> {}
+            else -> {
+                user = preferencesManager.getData("user", "User")
+                userId = preferencesManager.getData("userId", "1").toInt()
+                viewModel.getAllPlans(userId)
+            }
         }
     }
     Surface(color = MaterialTheme.colorScheme.background) {
@@ -77,7 +85,7 @@ fun HomeScreen(viewModel: HomeScreenViewModel = hiltViewModel() ) {
 
                 ) {
                 Text(text = "Welcome back", style = MaterialTheme.typography.titleLarge)
-                Text(text = "User", style = MaterialTheme.typography.titleLarge)
+                Text(text = user, style = MaterialTheme.typography.titleLarge)
             }
             Column(
                 modifier = Modifier
@@ -123,9 +131,8 @@ fun HomeScreen(viewModel: HomeScreenViewModel = hiltViewModel() ) {
             }
 
             if(showAllPlansDialog){
-                ChangePlanDialog(allPlans = allPlans, onDismiss = { showAllPlansDialog = false }) { it, i ->
-                    viewModel.planIndex = i
-                    viewModel.changeCurPlan(it, i)
+                ChangePlanDialog(allPlans = allPlans, onDismiss = { showAllPlansDialog = false }) { it->
+                    viewModel.changeCurPlan(it)
                     showAllPlansDialog = false
                 }
             }

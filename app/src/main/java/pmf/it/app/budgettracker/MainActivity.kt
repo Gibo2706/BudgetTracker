@@ -53,13 +53,14 @@ import pmf.it.app.budgettracker.ui.theme.BudgetTrackerTheme
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val prefManager = PreferencesManager(this)
-    var token = prefManager.getData("token", "")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val prefManager = PreferencesManager(this)
+        val token = prefManager.getData("token", "")
         setContent {
             BudgetTrackerTheme {
-                var systemBarStyle by remember {
+                val systemBarStyle by remember {
                     val defaultSystemBarColor = android.graphics.Color.TRANSPARENT
                     mutableStateOf(
                         SystemBarStyle.auto(
@@ -72,9 +73,6 @@ class MainActivity : ComponentActivity() {
                     enableEdgeToEdge(
                         navigationBarStyle = systemBarStyle,
                     )
-                }
-                val tokenL by remember { //TODO: FIX THIS
-                    mutableStateOf(token)
                 }
                 val navController = rememberNavController()
                 val snackbarHostState = remember { SnackbarHostState() }
@@ -89,11 +87,24 @@ class MainActivity : ComponentActivity() {
                         .systemGestureExclusion()
                         .fillMaxSize(),
                     bottomBar = {
-                        if(tokenL.isNotEmpty()) {
+                        val bottomBarState = remember { mutableStateOf(true) }
+                        val navBackStackEntry by navController.currentBackStackEntryAsState()
+                        when(navBackStackEntry?.destination?.route) {
+                            Screen.Login.route -> {
+                                bottomBarState.value = false
+                            }
+                            Screen.Register.route -> {
+                                bottomBarState.value = false
+                            }
+                            else -> {
+                                bottomBarState.value = true
+                            }
+                        }
+
+                        if(bottomBarState.value) {
                             BottomNavigation(
                                 modifier = Modifier.systemBarsPadding(),
                             ) {
-                                val navBackStackEntry by navController.currentBackStackEntryAsState()
                                 val currentDestination = navBackStackEntry?.destination
                                 items.forEach { screen ->
                                     BottomNavigationItem(
@@ -109,8 +120,10 @@ class MainActivity : ComponentActivity() {
                                         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                                         onClick = {
                                             navController.navigate(screen.route) {
-                                                popUpTo(navController.graph.findStartDestination().id) {
-                                                    saveState = true
+                                                navController.graph.startDestinationRoute?.let { route ->
+                                                    popUpTo(route) {
+                                                        saveState = true
+                                                    }
                                                 }
                                                 launchSingleTop = true
                                                 restoreState = true
@@ -125,7 +138,7 @@ class MainActivity : ComponentActivity() {
                 ) {innerPadding ->
                     NavHost(
                         navController,
-                        startDestination = Screen.Login.route,
+                        startDestination = if (token.isNotEmpty()) Screen.Home.route else Screen.Login.route,
                         Modifier.padding(innerPadding))
                     {
                         composable(Screen.Home.route) {
@@ -135,13 +148,13 @@ class MainActivity : ComponentActivity() {
                             PlanScreen()
                         }
                         composable(Screen.Profile.route) {
-                            ProfileScreen()
+                            ProfileScreen(navController = navController)
                         }
                         composable(Screen.Login.route) {
                             LoginScreen(navController = navController)
                         }
                         composable(Screen.Register.route){
-                            RegisterScreen()
+                            RegisterScreen(navController = navController)
                         }
                     }
                 }

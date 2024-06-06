@@ -28,16 +28,20 @@ class PlanScreenViewModel @Inject constructor(
     val currentPlan = mutableStateOf(Plan("", emptyList(), emptyList())) // current plan
     var allPlans = mutableStateListOf<Plan>()
     var currentProgress = mutableDoubleStateOf(0.0)
-    val token = preferencesManager.getData("token", "")
-    val user = preferencesManager.getData("user", "")
+
     init {
+        val userId = preferencesManager.getData("userId", "1").toLong()
+        val token = preferencesManager.getData("token", "")
         if(token.isNotEmpty())
-            getAllPlans(1)
+            getAllPlans(userId)
         if(allPlans.isNotEmpty())
             changeCurPlan(allPlans[0])
     }
     fun addPlan(plan: Plan) {
         try {
+            val token = preferencesManager.getData("token", "")
+            val user = preferencesManager.getData("user", "")
+            val userId = preferencesManager.getData("userId", "1").toLong()
             apiService.addPlan(token, user, plan).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
@@ -47,7 +51,7 @@ class PlanScreenViewModel @Inject constructor(
                         response.body()?.let {
                             responseMessage.value = it.string()
                             changeCurPlan(plan)
-                            getAllPlans(1)
+                            getAllPlans(userId)
                         } ?: run {
                             responseMessage.value = "Server error"
                         }
@@ -69,11 +73,15 @@ class PlanScreenViewModel @Inject constructor(
     fun getAllPlans(id: Long){
         viewModelScope.launch {
             try {
+                val token = preferencesManager.getData("token", "")
+                val user = preferencesManager.getData("user", "")
                 val temp = apiService.getAllByUser(token, user, id)
                 allPlans.clear()
                 allPlans.addAll(temp)
                 if (currentPlan.value.name == "" && allPlans.isNotEmpty())
                     changeCurPlan(allPlans[0])
+                else if(allPlans.isEmpty())
+                    changeCurPlan(Plan("", emptyList(), emptyList()))
             }catch (e: Exception){
                 responseMessage.value = e.message.toString()
                 Log.d("PlanScreenViewModel", e.message.toString())
@@ -81,13 +89,16 @@ class PlanScreenViewModel @Inject constructor(
         }
     }
 
-    fun changeCurPlan(newPlan: Plan, index: Int = 0){
+    fun changeCurPlan(newPlan: Plan){
         currentPlan.value = newPlan
         currentProgress.doubleValue = (currentPlan.value.prihodi.sumOf { it.amount } * currentPlan.value.timePeriod - currentPlan.value.troskovi.sumOf { it.amount } * currentPlan.value.timePeriod)
     }
 
     fun addTrosak(trosak: Trosak){
         try {
+            val token = preferencesManager.getData("token", "")
+            val user = preferencesManager.getData("user", "")
+            val userId = preferencesManager.getData("userId", "1").toLong()
             apiService.addTrosak(token, user, currentPlan.value.name, trosak).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
@@ -96,7 +107,7 @@ class PlanScreenViewModel @Inject constructor(
                     if (response.isSuccessful) {
                         response.body()?.let {
                             responseMessage.value = it.string()
-                            getAllPlans(1)
+                            getAllPlans(userId)
                             changeCurPlan(currentPlan.value.copy(troskovi = currentPlan.value.troskovi + trosak))
                         } ?: run {
                             responseMessage.value = "Server error"
@@ -119,6 +130,9 @@ class PlanScreenViewModel @Inject constructor(
 
     fun deleteTrosak(trosak: Trosak){
         try {
+            val token = preferencesManager.getData("token", "")
+            val user = preferencesManager.getData("user", "")
+            val userId = preferencesManager.getData("userId", "1").toLong()
             apiService.deleteTrosak(token, user, currentPlan.value.name, trosak).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
@@ -127,7 +141,7 @@ class PlanScreenViewModel @Inject constructor(
                     if (response.isSuccessful) {
                         response.body()?.let {
                             responseMessage.value = it.string()
-                            getAllPlans(1)
+                            getAllPlans(userId)
                             changeCurPlan(currentPlan.value.copy(troskovi = currentPlan.value.troskovi - trosak))
                         } ?: run {
                             responseMessage.value = "Server error"
@@ -151,6 +165,9 @@ class PlanScreenViewModel @Inject constructor(
 
     fun addPrihod(prihod: Prihod){
         try {
+            val token = preferencesManager.getData("token", "")
+            val user = preferencesManager.getData("user", "")
+            val userId = preferencesManager.getData("userId", "1").toLong()
             apiService.addPrihod(token, user, currentPlan.value.name, prihod).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
@@ -159,7 +176,7 @@ class PlanScreenViewModel @Inject constructor(
                     if (response.isSuccessful) {
                         response.body()?.let {
                             responseMessage.value = it.string()
-                            getAllPlans(1)
+                            getAllPlans(userId)
                             changeCurPlan(currentPlan.value.copy(prihodi = currentPlan.value.prihodi + prihod))
                         } ?: run {
                             responseMessage.value = "Server error"
@@ -182,6 +199,9 @@ class PlanScreenViewModel @Inject constructor(
 
     fun deletePrihod(prihod: Prihod){
         try {
+            val token = preferencesManager.getData("token", "")
+            val user = preferencesManager.getData("user", "")
+            val userId = preferencesManager.getData("userId", "1").toLong()
             apiService.deletePrihod(token, user, currentPlan.value.name, prihod).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
@@ -190,7 +210,7 @@ class PlanScreenViewModel @Inject constructor(
                     if (response.isSuccessful) {
                         response.body()?.let {
                             responseMessage.value = it.string()
-                            getAllPlans(1)
+                            getAllPlans(userId)
                             changeCurPlan(currentPlan.value.copy(prihodi = currentPlan.value.prihodi - prihod))
                         } ?: run {
                             responseMessage.value = "Server error"
@@ -213,6 +233,9 @@ class PlanScreenViewModel @Inject constructor(
 
     fun setGoal(goal: String, timePeriod: Long){
         try {
+            val token = preferencesManager.getData("token", "")
+            val user = preferencesManager.getData("user", "")
+            val userId = preferencesManager.getData("userId", "1").toLong()
             apiService.addGoal(token, user, currentPlan.value.name, goal.toDouble(), timePeriod).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
@@ -221,7 +244,7 @@ class PlanScreenViewModel @Inject constructor(
                     if (response.isSuccessful) {
                         response.body()?.let {
                             responseMessage.value = it.string()
-                            getAllPlans(1)
+                            getAllPlans(userId)
                             changeCurPlan(currentPlan.value.copy(cilj = goal.toDouble(), timePeriod = timePeriod))
                         } ?: run {
                             responseMessage.value = "Server error"

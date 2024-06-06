@@ -25,9 +25,10 @@ class HomeScreenViewModel @Inject constructor(
     var planIndex: Int = 0;
     val token = preferencesManager.getData("token", "")
     val user = preferencesManager.getData("user", "")
+    val userId = preferencesManager.getData("userId", "1").toInt()
     init {
         if(token.isNotEmpty())
-            getAllPlans(1);
+            getAllPlans(userId);
     }
 
 

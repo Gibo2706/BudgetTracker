@@ -1,6 +1,7 @@
 package pmf.it.app.budgettracker.ui.screen
 
 import android.content.res.Configuration
+import android.view.KeyEvent
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.sharp.DeleteForever
@@ -28,17 +29,26 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import pmf.it.app.budgettracker.data.PreferencesManager
 import pmf.it.app.budgettracker.data.model.Plan
 import pmf.it.app.budgettracker.data.model.Prihod
 import pmf.it.app.budgettracker.data.model.Trosak
@@ -62,6 +72,26 @@ fun PlanScreen(
     val context = LocalContext.current
     val allPlans = viewModel.allPlans
     val currentProgress by viewModel.currentProgress
+    val preferencesManager = PreferencesManager(LocalContext.current)
+    var userId = preferencesManager.getData("userId", "1").toLong()
+    var user = preferencesManager.getData("user", "User")
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
+    LaunchedEffect(lifecycleState) {
+        when(lifecycleState) {
+            Lifecycle.State.STARTED -> {
+                //viewModel.checkIfUserIsLoggedIn()
+            }
+            Lifecycle.State.RESUMED -> {
+                viewModel.getAllPlans(userId)
+            }
+            else -> {
+                user = preferencesManager.getData("user", "User")
+                userId = preferencesManager.getData("userId", "1").toLong()
+                viewModel.getAllPlans(userId)
+            }
+        }
+    }
     Surface {
         LaunchedEffect(statusSnackBar) {
             if(statusSnackBar.isNotEmpty()) {
@@ -174,7 +204,7 @@ fun PlanScreen(
                 FloatingActionButton(
                     onClick = {
                         showChangePlanDialog.value = true
-                        viewModel.getAllPlans(1)
+                        viewModel.getAllPlans(userId)
                     }) {
                     Text(text = "List", style = MaterialTheme.typography.titleMedium)
                 }
@@ -215,9 +245,9 @@ fun PlanScreen(
                 ChangePlanDialog(
                     allPlans = allPlans.toList(),
                     onDismiss = { showChangePlanDialog.value = false },
-                    onChange = {it, i ->
+                    onChange = {it ->
                         showChangePlanDialog.value = false
-                        viewModel.changeCurPlan(it, i)
+                        viewModel.changeCurPlan(it)
                     }
                 )
             }
@@ -227,7 +257,8 @@ fun PlanScreen(
                     onAdd = {
                         viewModel.addPlan(it)
                         showNewPlanDialog.value = false
-                    }
+                    },
+                    user = user
                 )
             }
             if (showPrihodListDialog.value) {
@@ -343,6 +374,7 @@ fun AddExpensesDialog(onDismiss: () -> Unit, onAdd: (Trosak) -> Unit = {}) {
     var expenses by remember { mutableStateOf("") }
     var expensesAmount by remember { mutableStateOf("") }
     var isImpulse by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add Expenses") },
@@ -356,14 +388,36 @@ fun AddExpensesDialog(onDismiss: () -> Unit, onAdd: (Trosak) -> Unit = {}) {
                         value = expenses,
                         onValueChange = { expenses = it },
                         label = { Text("Expenses") },
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .onPreviewKeyEvent {
+                                if (it.key == Key.Tab && it.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
+                                    focusManager.moveFocus(FocusDirection.Down)
+                                    true
+                                } else
+                                    false
+                            },
+                        keyboardActions = KeyboardActions(onNext = {
+                            focusManager.moveFocus(FocusDirection.Down)
+                        })
                     )
                     TextField(
                         value = expensesAmount,
                         onValueChange = { expensesAmount = it },
                         label = { Text("Amount") },
-                        modifier = Modifier.padding(16.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .onPreviewKeyEvent {
+                                if (it.key == Key.Tab && it.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
+                                    focusManager.moveFocus(FocusDirection.Down)
+                                    true
+                                } else
+                                    false
+                            },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardActions = KeyboardActions(onNext = {
+                            focusManager.moveFocus(FocusDirection.Down)
+                        })
                     )
                     Row(
                         modifier = Modifier.padding(16.dp),
@@ -395,7 +449,7 @@ fun AddExpensesDialog(onDismiss: () -> Unit, onAdd: (Trosak) -> Unit = {}) {
 fun ChangePlanDialog(
     allPlans: List<Plan>,
     onDismiss: () -> Unit,
-    onChange: (Plan, Int) -> Unit = {_,_ -> }
+    onChange: (Plan) -> Unit = { }
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -403,7 +457,7 @@ fun ChangePlanDialog(
         text = {
             LazyColumn {
                 if(allPlans.isNotEmpty() ){
-                    itemsIndexed(allPlans) {i, it ->
+                    items(allPlans){
                         Row(
                             modifier = Modifier
                                 .padding(16.dp)
@@ -412,7 +466,7 @@ fun ChangePlanDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ){
                             Text(text = it.name)
-                            Button(onClick = { onChange(it, i)  }) {
+                            Button(onClick = { onChange(it)  }) {
                                 Text(text = "Select")
                             }
                         }
@@ -434,10 +488,11 @@ fun ChangePlanDialog(
 }
 
 @Composable
-fun NewPlanDialog(onDismiss: () -> Unit, onAdd: (Plan) -> Unit = {}) {
+fun NewPlanDialog(onDismiss: () -> Unit, onAdd: (Plan) -> Unit = {}, user: String) {
     var plan by remember { mutableStateOf("") }
     var goal by remember { mutableStateOf("") }
     var timePeriod by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("New Plan") },
@@ -452,21 +507,54 @@ fun NewPlanDialog(onDismiss: () -> Unit, onAdd: (Plan) -> Unit = {}) {
                     value = plan,
                     onValueChange = { plan  = it },
                     label = { Text("Title of plan") },
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .onPreviewKeyEvent {
+                            if (it.key == Key.Tab && it.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
+                                focusManager.moveFocus(FocusDirection.Down)
+                                true
+                            } else
+                                false
+                        },
+                    keyboardActions = KeyboardActions(onNext = {
+                        focusManager.moveFocus(FocusDirection.Down)
+                    })
                 )
                 TextField(
                     value = goal,
                     onValueChange = { goal = it },
                     label = { Text("Goal") },
-                    modifier = Modifier.padding(16.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .onPreviewKeyEvent {
+                            if (it.key == Key.Tab && it.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
+                                focusManager.moveFocus(FocusDirection.Down)
+                                true
+                            } else
+                                false
+                        },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    keyboardActions = KeyboardActions(onNext = {
+                        focusManager.moveFocus(FocusDirection.Down)
+                    })
                 )
                 TextField(
                     value = timePeriod,
                     onValueChange = { timePeriod = it },
                     label = { Text("Time period") },
-                    modifier = Modifier.padding(16.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .onPreviewKeyEvent {
+                            if (it.key == Key.Tab && it.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
+                                focusManager.moveFocus(FocusDirection.Down)
+                                true
+                            } else
+                                false
+                        },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    keyboardActions = KeyboardActions(onNext = {
+                        focusManager.moveFocus(FocusDirection.Down)
+                    })
                 )
             }
 
@@ -480,10 +568,10 @@ fun NewPlanDialog(onDismiss: () -> Unit, onAdd: (Plan) -> Unit = {}) {
                     goal.toDouble(),
                     timePeriod.toLong(),
                     User(
-                        "username",
-                        "Test@test.com",
-                        "Test",
-                        "Testovic"
+                        user,
+                        "",
+                        "",
+                        ""
                     )
                 ))
             }) {
@@ -506,7 +594,7 @@ fun PrihodListDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Change Plan") },
+        title = { Text("Income list") },
         text = {
             LazyColumn(
                 modifier = Modifier.padding(16.dp),
@@ -552,7 +640,7 @@ fun TrosakListDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Change Plan") },
+        title = { Text("Expense list") },
         text = {
             LazyColumn(
                 modifier = Modifier.padding(16.dp),

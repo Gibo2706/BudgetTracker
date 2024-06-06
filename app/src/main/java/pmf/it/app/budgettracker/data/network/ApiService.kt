@@ -1,10 +1,12 @@
 package pmf.it.app.budgettracker.data.network
 
 import okhttp3.ResponseBody
+import pmf.it.app.budgettracker.data.dto.RegisterDTO
 import pmf.it.app.budgettracker.data.dto.ResponseDTO
 import pmf.it.app.budgettracker.data.model.Plan
 import pmf.it.app.budgettracker.data.model.Prihod
 import pmf.it.app.budgettracker.data.model.Trosak
+import pmf.it.app.budgettracker.data.model.User
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -18,6 +20,9 @@ import retrofit2.http.Query
 interface ApiService {
     @GET("auth/login")
     suspend fun login(@Query("username") username: String, @Query("password") password: String): ResponseDTO
+
+    @POST("auth/register")
+    suspend fun register(@Body registerDTO: RegisterDTO): ResponseDTO
 
     @POST("plan/add")
     @Headers("Accept: text/plain")
@@ -40,4 +45,10 @@ interface ApiService {
 
     @POST("plan/deletePrihod")
     fun deletePrihod(@Header("token") token:String, @Header("user") user:String, @Query("plan") plan: String, @Body prihod: Prihod): Call<ResponseBody>
+
+    @GET("user/getUser")
+    suspend fun getUser(@Header("token") token:String, @Header("user") user:String): User
+
+    @POST("user/updateUser")
+    suspend fun updateUser(@Header("token") token:String, @Header("user") user:String, @Body userBody: User): User
 }

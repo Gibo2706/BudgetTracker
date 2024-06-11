@@ -63,10 +63,28 @@ To set up and run this project locally, follow these steps:
     Register a new account or log in with existing credentials.
     Navigate through the app to manage their expenses and budgets.
     The app communicates with the backend service to fetch and store data.
-
 ## Screenshots
 
-  Screenshots will be added here once the application is completed.
+### Login and register
+<img src="https://github.com/Gibo2706/BudgetTracker/assets/95984932/e87ddfb4-c10b-4e0e-a853-a9edead4f5c4" width="300">
+<img src="https://github.com/Gibo2706/BudgetTracker/assets/95984932/03fd5c5d-af46-4b28-9b36-d16427e552ff" width="300">
+
+### Main screen
+<img src="https://github.com/Gibo2706/BudgetTracker/assets/95984932/5786cb60-2a63-41ed-bed5-1c8d6a42acf4" width="300">
+
+### Plan screen
+<img src="https://github.com/Gibo2706/BudgetTracker/assets/95984932/3e5c2259-6be8-4adf-8650-31ae40dab736" width="300">
+
+### Profile screen and dialog for editing profile
+<img src="https://github.com/Gibo2706/BudgetTracker/assets/95984932/401290a2-e407-40de-81a5-c9992c986858" width="300">
+<img src="https://github.com/Gibo2706/BudgetTracker/assets/95984932/33963878-17eb-4312-b9a0-525f1f4e1d63" width="300">
+
+### Dialogs
+<img src="https://github.com/Gibo2706/BudgetTracker/assets/95984932/00cf598c-a66d-464b-9312-94f9c406c1d3" width="300">
+<img src="https://github.com/Gibo2706/BudgetTracker/assets/95984932/c5e4e2ab-38c2-4ade-82df-91c1b4ea03e1" width="300">
+<img src="https://github.com/Gibo2706/BudgetTracker/assets/95984932/74f5a357-7c9c-44e7-8ddb-14e3e9e906f9" width="300">
+<img src="https://github.com/Gibo2706/BudgetTracker/assets/95984932/076ca9d0-db0c-48bc-baec-e09c55fbd215" width="300">
+
 
 ## Contributing
 
